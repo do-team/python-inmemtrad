@@ -29,7 +29,6 @@ def get_variable(variable_name):
 
 def set_variable(variable_name, variable_value, variable_expire):
     r = redis.Redis(connection_pool=POOL)
-    print "Variable name: " + variable_name +  " val: " + variable_value
     try:
         r.lpush(variable_name, variable_value)
     except redis.exceptions.ResponseError as exc:
@@ -41,7 +40,7 @@ def set_variable(variable_name, variable_value, variable_expire):
 # Let's have some engine generating orders,
 # P.S. After 10 hours, i can say that manually it's fuking boring :)
 def generate_orders(cycles=1, expire=1):
-    for cycle in range(cycles):
+    for cycle in range(int(cycles)):
         item, customer = randomize_values()
         print "Company " + str(customer) + " offers : " + str(item[0:4]) + " for " + str(item[5:10]) + " ( " + item + " )"
         set_variable(item, customer, expire)
