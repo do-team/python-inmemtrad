@@ -11,4 +11,4 @@ COPY . /usr/src/inmemtrad
 
 RUN pip install redis
 
-CMD ["python", "inmemtrad.py", "", "10000000"]
+CMD ["python", "inmemtrad.py", "--role buy", "-cycles 1000"]
