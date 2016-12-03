@@ -14,9 +14,6 @@ POOL = redis.ConnectionPool(host='mycentos7', port=6379, db=0)
 customers = ["AUX1", "BFG2", "CRE3", "DRS4", "EFI5", "FRA6", "GOR1", "AAR1"]
 products = ["wood", "gold", "fish", "wine"]
 
-# Can it run in cycles? Whoooa
-variable_cycles = 1000 * 1000
-
 # Look into DB for selling bid
 def get_variable(variable_name):
     r = redis.Redis(connection_pool=POOL)
@@ -40,6 +37,7 @@ def set_variable(variable_name, variable_value, variable_expire):
 #    else:
 #        r.set(variable_name, variable_value, variable_expire)
 
+
 # Let's have some engine generating orders,
 # P.S. After 10 hours, i can say that manually it's fuking boring :)
 def generate_orders(cycles=1, expire=1):
@@ -49,15 +47,18 @@ def generate_orders(cycles=1, expire=1):
         set_variable(item, customer, expire)
     return
 
+
 # Throw me some random items offered by customers
 def randomize_values():
     item = str(random.choice(products)) + "-" + str(random.randint(1,3))
     customer = str(random.choice(customers))
     return item, customer
 
+
 # Let say we have a deal
 def make_a_deal():
     return
+
 
 # Simplest test case
 def test_case_buy():
@@ -83,15 +84,16 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='Utility generating buy/sell orders based on parameter. Default=Sell orders',
                                  prog='InMemoryAlgoTrader')
 
-    ap.add_argument("-r", "--role", action="store",
-                    default="sell",
+    ap.add_argument("-r", "--role", action="store",default="sell",
                     help="Are you buying or selling? Let's state 'BUY/SELL' and your dream and it will come true immediatelly!")
 
+    ap.add_argument("-c", "--cycles", action="store", default=1000, help="How long should I run? Just state number of cycles")
     ap.add_argument("-v", "--version", action="version", version="%(prog)s 1.0", help="Display script version, nothing really new.")
     ap.add_argument("-l", "--verbosity_level", action="store_true", help="Enables output verbosity")
 
     args = ap.parse_args()
     my_role = args.role
+    variable_cycles = args.cycles
     print "My role is now : " + my_role
 
     verbose = args.verbosity_level
@@ -100,7 +102,7 @@ if __name__ == '__main__':
         print('===============================================================')
         print('Generating orders for Redis')
         print('===============================================================')
-        generate_orders(variable_cycles, expire=2)
+        generate_orders(variable_cycles)
 
     if my_role == "sell":
         print('===============================================================')
