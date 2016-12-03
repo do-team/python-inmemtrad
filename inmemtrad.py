@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     args = ap.parse_args()
     my_role = args.role
-    variable_cycles = args.cycles
+    cycles = args.cycles
     print "My role is now : " + my_role
 
     verbose = args.verbosity_level
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         print('===============================================================')
         print('Generating orders for Redis')
         print('===============================================================')
-        generate_orders(variable_cycles)
+        generate_orders(cycles)
 
     if my_role == "sell":
         print('===============================================================')

@@ -9,6 +9,6 @@ WORKDIR /usr/src/inmemtrad
 COPY inmemtrad.py /usr/src/inmemtrad
 COPY . /usr/src/inmemtrad
 
-RUN python pip install redis
+RUN pip install redis
 
 CMD ["python", "inmemtrad.py", "", "10000000"]
