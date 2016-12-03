@@ -49,7 +49,7 @@ def generate_orders(cycles=1, expire=1):
 
 # Throw me some random items offered by customers
 def randomize_values():
-    item = str(random.choice(products)) + "-" + str(random.randint(1,3))
+    item = str(random.choice(products)) + "-" + random.randint(10,300).__format__('{:04d}'.format(4))
     customer = str(random.choice(customers))
     return item, customer
 
@@ -108,5 +108,5 @@ if __name__ == '__main__':
         print('Time for tests')
         print('===============================================================')
 
-        for i in range(200):
+        for i in range(cycles):
             test_case_buy()
