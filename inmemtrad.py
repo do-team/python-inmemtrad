@@ -1,57 +1,42 @@
 # /usr/bin/python
 '''
  Purpose : Simple program to generate random product and it's price
- Format  : <prod1>-<price>-hash: customer
+ Format  : <prod>-<price>-<order_type>: customer_list
 '''
 
 
 import argparse
-import os
 import random
 import redis
 
 POOL = redis.ConnectionPool(host='mycentos7', port=6379, db=0)
+#POOL = redis.ConnectionPool(host='35.156.118.89', port=6379, db=0)
 
 # List of few customer id's for free, rest will be added for small fee.. You know the drill, right
 customers = ["AUX1", "BFG2", "CRE3", "DRS4", "EFI5", "FRA6", "GOR1", "AAR1"]
 products = ["wood", "gold", "fish", "wine"]
-orders   = ["buy", "sell"]
+orders = ["buy", "sell"]
 
 
 # Look into DB for selling/buying offers
-def get_variable(variable_name, variable_value):
+def get_variable(variable_name):
     r = redis.Redis(connection_pool=POOL)
-
-    # Lets see if there's key
     response = r.lrange(variable_name,0,-1)
+    return response
 
-    # If there is, remove it from left
-    # otherwise add from right
-    if not response:
-        print "Listing " + str(variable_name) + " : " + str(response)
-        r.lpop(variable_name)
-    else:
-        print "Response: " + str(response)
-        r.rpush(variable_name, variable_value)
 
-    print "List of customers for " + str(variable_name) + " " + str(r.lrange(variable_name,0,-1))
+def remove_variable(variable_name):
+    r = redis.Redis(connection_pool=POOL)
+    response = r.lpop(variable_name)
     return response
 
 
 # Create variable in Redis database
 # Key is composed from item_name + price_value + order_type, eg. gold-200-buy/sell
-def set_variable(variable_name, variable_value, variable_type):
+def set_variable(variable_name, variable_value):
     r = redis.Redis(connection_pool=POOL)
-    variable_name = variable_name + "-" + variable_type
-    response = r.lrange(variable_name,0,-1)
-
-    if not response:
-        r.lpush(variable_name, variable_value)
-        print r.lrange(variable_name,0,-1)
-    else:
-        get_variable(variable_name,variable_value)
-    #except redis.exceptions.ResponseError as exc:
-    #    print "Failed with " + str(exc)
+    response = r.rpush(variable_name, variable_value)
+    return response
 
 
 # Let's have some engine generating pseudo-random orders
@@ -65,9 +50,11 @@ def generate_orders(cycles=1):
 
 # Throw me some random items offered by customers
 def randomize_values():
-    item = str(random.choice(products)) + "-" + random.randint(10,30).__format__('{:04d}'.format(4))
+    item = str(random.choice(products))
+    price = random.randint(1,99)
     customer = str(random.choice(customers))
     instruction = str(random.choice(orders))
+    item = item + "-" + str(price)
     return item, customer, instruction
 
 
@@ -77,25 +64,27 @@ def make_a_deal():
 
 
 # Simplest test case
-def test_case_buy():
-    item_test = (randomize_values())    # Generate random cust with demand
-    buy_id = item_test[1]               # Customer name
-    item_id = item_test[0]              # Customer item
+def test_case():
+    test_item, test_customer, test_instruction = (randomize_values())    # Generate random cust with demand
 
-    print "BUYER ID: " + buy_id + "   Looking for item : " + str(item_id) + "\n"
+    print "CustomerID : " + test_customer + " wants to " + test_instruction + " " + str(test_item) + "\n"
 
-    # Determine if item already exist
-    find_item = get_variable(item_id, buy_id)
-
-    # When exist, we can arrange a deal
-    if find_item:
-        # print "There's offer for >>> " + str(item_id) + " from : " + str(find_item)
-        print "Buying !!  Company " + str(buy_id) + " buying " + str(item_id) + " from : " + str(find_item[0])
-    # Otherwise just wipe an eye
+    if test_instruction == "buy":
+        find_item = get_variable(test_item+"-sell")
     else:
-        print "Nothing found, sorry. No deal today."
+        find_item = get_variable(test_item+"-buy")
+    print "Result of GET_VAR operation " + str(find_item)
 
+    if find_item:
+        print "Found item : " + str(test_item)
+    else:
+        print "Found NO item, adding " + test_item+ " .. " + test_instruction + " with " + test_customer
+        set_variable(test_item+"-"+test_instruction,test_customer)
+
+    print "Item : " + str(test_item) + "-" + str(test_instruction) + " : " + str(find_item)
     print "----------------------------------------- *** ---------------------------------------------------- "
+
+
 
 if __name__ == '__main__':
     # Let's describe purpose of utility & add some mandatory & optional arguments
@@ -114,21 +103,7 @@ if __name__ == '__main__':
     cycles = args.cycles
     print "My role is now : " + my_role
 
-#    print "Reading environment variable " + os.environ("IMTCONNECT")
-
-
     verbose = args.verbosity_level
 
-    if my_role == "sell":
-        print('===============================================================')
-        print('Generating orders for Redis')
-        print('===============================================================')
-        generate_orders(cycles)
-
-    if my_role == "buy":
-        print('===============================================================')
-        print('Time for tests')
-        print('===============================================================')
-
-        for i in range(cycles):
-            test_case_buy()
+    for cycle in range(int(cycles)):
+        test_case()
