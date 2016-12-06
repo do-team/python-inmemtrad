@@ -8,6 +8,7 @@
 import argparse
 import random
 import redis
+import time
 
 POOL = redis.ConnectionPool(host='mycentos7', port=6379, db=0)
 #POOL = redis.ConnectionPool(host='35.156.118.89', port=6379, db=0)
@@ -90,7 +91,7 @@ if __name__ == '__main__':
 
     ap.add_argument("-r", "--role", action="store",default="sell", help="Welcome master. Are you buying or selling today?")
     ap.add_argument("-e", "--env", action="store", default="mycentos7", help="Where is your REDIS DB residing?")
-    ap.add_argument("-c", "--cycles", type=int, action="store", default=10000000, help="How long should I run? Just state number of cycles")
+    ap.add_argument("-c", "--cycles", type=int, action="store", default=100000, help="How long should I run? Just state number of cycles")
     ap.add_argument("-v", "--version", action="version", version="%(prog)s 1.0", help="Display script version, nothing really new.")
     ap.add_argument("-l", "--verbosity_level", action="store_true", help="Enables output verbosity")
 
@@ -100,5 +101,9 @@ if __name__ == '__main__':
 
     verbose = args.verbosity_level
 
+    start_time = time.time()
+
     for cycle in range(int(cycles)):
         test_case()
+
+    print("--- %s seconds ---" % (time.time() - start_time))
