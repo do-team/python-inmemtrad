@@ -8,11 +8,13 @@
 import argparse
 import random
 import redis
+import os
+
 
 POOL = redis.ConnectionPool(host='mycentos7', port=6379, db=0)
 #POOL = redis.ConnectionPool(host='35.156.118.89', port=6379, db=0)
 
-# List of few customer id's for free, rest will be added for small fee.. You know the drill, right
+# List of few customer id's for free, rest will be added for small bribe.. You know the drill, right
 customers = ["AUX1", "BFG2", "CRE3", "DRS4", "EFI5", "FRA6", "GOR1", "AAR1"]
 products = ["wood", "gold", "fish", "wine"]
 orders = ["buy", "sell"]
@@ -67,28 +69,27 @@ def make_a_deal():
 def test_case():
     test_item, test_customer, test_instruction = (randomize_values())    # Generate random cust with demand
 
-    print "CustomerID : " + test_customer + " wants to " + test_instruction + " " + str(test_item) + "\n"
+    print "CustomerID : " + test_customer + " wants to " + test_instruction + " " + str(test_item)
 
     if test_instruction == "buy":
         find_item = get_variable(test_item+"-sell")
     else:
         find_item = get_variable(test_item+"-buy")
-    print "Result of GET_VAR operation " + str(find_item)
 
     if find_item:
-        print "Found item : " + str(test_item)
+        print "TRADE DETECTED! " + str(test_customer) + " just traded " + str(test_item) + \
+              ", best offer by: " + str(find_item) + ". Removing from orderbook. \n"
+        remove_variable(find_item)
     else:
-        print "Found NO item, adding " + test_item+ " .. " + test_instruction + " with " + test_customer
-        set_variable(test_item+"-"+test_instruction,test_customer)
+        print "New order inserted! " + test_item + "-" + test_instruction + " " + test_customer + "\n"
+        set_variable(test_item + "-" + test_instruction, test_customer)
 
-    print "Item : " + str(test_item) + "-" + str(test_instruction) + " : " + str(find_item)
     print "----------------------------------------- *** ---------------------------------------------------- "
-
 
 
 if __name__ == '__main__':
     # Let's describe purpose of utility & add some mandatory & optional arguments
-    ap = argparse.ArgumentParser(description='Utility generating buy/sell orders based on parameter. Default=Sell orders',
+    ap = argparse.ArgumentParser(description='Utility generating buy/sell orders based on parameter. Default=Selling orders',
                                  prog='InMemoryAlgoTrader')
 
     ap.add_argument("-r", "--role", action="store",default="sell",
@@ -101,6 +102,7 @@ if __name__ == '__main__':
     args = ap.parse_args()
     my_role = args.role
     cycles = args.cycles
+
     print "My role is now : " + my_role
 
     verbose = args.verbosity_level
