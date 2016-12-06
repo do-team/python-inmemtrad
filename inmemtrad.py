@@ -8,8 +8,6 @@
 import argparse
 import random
 import redis
-import os
-
 
 POOL = redis.ConnectionPool(host='mycentos7', port=6379, db=0)
 #POOL = redis.ConnectionPool(host='35.156.118.89', port=6379, db=0)
@@ -42,12 +40,9 @@ def set_variable(variable_name, variable_value):
 
 
 # Let's have some engine generating pseudo-random orders
-def generate_orders(cycles=1):
-    for cycle in range(int(cycles)):
-        item, customer, instruct = randomize_values()
-        print "Company " + str(customer) + " offers : " + str(item[0:4]) + " for $" + str(item[5:9]) + " ( " + item + " )"
-        set_variable(item, customer, instruct)
-    return
+def generate_orders():
+    item, customer, instruct = randomize_values()
+    return item, customer, instruct
 
 
 # Throw me some random items offered by customers
@@ -67,8 +62,7 @@ def make_a_deal():
 
 # Simplest test case
 def test_case():
-    test_item, test_customer, test_instruction = (randomize_values())    # Generate random cust with demand
-
+    test_item, test_customer, test_instruction = generate_orders()
     print "CustomerID : " + test_customer + " wants to " + test_instruction + " " + str(test_item)
 
     if test_instruction == "buy":
@@ -80,10 +74,12 @@ def test_case():
         print "TRADE DETECTED! " + str(test_customer) + " just traded " + str(test_item) + \
               ", best offer by: " + str(find_item) + ". Removing from orderbook. \n"
         remove_variable(find_item)
+        print get_variable(test_item+"-"+test_instruction)                      # DEBUG info
+
     else:
         print "New order inserted! " + test_item + "-" + test_instruction + " " + test_customer + "\n"
         set_variable(test_item + "-" + test_instruction, test_customer)
-
+        print get_variable(test_item+"-"+test_instruction)                      # DEBUG info
     print "----------------------------------------- *** ---------------------------------------------------- "
 
 
@@ -92,18 +88,15 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='Utility generating buy/sell orders based on parameter. Default=Selling orders',
                                  prog='InMemoryAlgoTrader')
 
-    ap.add_argument("-r", "--role", action="store",default="sell",
-                    help="Are you buying or selling? Let's state 'BUY/SELL' and your dream and it will come true immediatelly!")
-
-    ap.add_argument("-c", "--cycles", type=int, action="store", default=100, help="How long should I run? Just state number of cycles")
+    ap.add_argument("-r", "--role", action="store",default="sell", help="Welcome master. Are you buying or selling today?")
+    ap.add_argument("-e", "--env", action="store", default="mycentos7", help="Where is your REDIS DB residing?")
+    ap.add_argument("-c", "--cycles", type=int, action="store", default=10000000, help="How long should I run? Just state number of cycles")
     ap.add_argument("-v", "--version", action="version", version="%(prog)s 1.0", help="Display script version, nothing really new.")
     ap.add_argument("-l", "--verbosity_level", action="store_true", help="Enables output verbosity")
 
     args = ap.parse_args()
     my_role = args.role
     cycles = args.cycles
-
-    print "My role is now : " + my_role
 
     verbose = args.verbosity_level
 
